@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <Windows.h>
 #include <random>
+#include <functional>
 
 typedef void (*FuncPtr)(int*);
 
@@ -24,37 +25,37 @@ void Answer(int* answer) {
 	scanf_s(" %d", answer);
 }
 
-//奇数か偶数か選択をさせる関数
-void AnswerSelect(FuncPtr p, int* select) {
-
-	p(select);
-	if (*select == 2) {
-		printf("偶数を選択したね。\n");
-	} else if (*select == 1) {
-		printf("奇数を選択したね。\n");
-	} else {
-		printf("入力が間違っているよ。もう一度入力して。\n");
-		AnswerSelect(p, select);
-	}
-}
-
-//もう一度プレイするかどうかの選択をさせる関数
-void PlaySelect(FuncPtr p, int* select) {
-	p(select);
-	if (*select == 1) {
-		printf("1を選択したね。\n");
-	} else if (*select == 2) {
-		printf("2を選択したね。\n");
-	} else {
-		printf("入力が間違っているよ。もう一度入力して。\n");
-		PlaySelect(p, select);
-	}
-}
 
 int main(void) {
 
-	//関数ポインタの宣言
-	FuncPtr p = Answer;
+	int answer;
+	int isPlay;
+
+	//奇数か偶数か選択をさせる関数
+	std::function<void(FuncPtr p)> funcAnswerSelect = [&](FuncPtr p) {
+		p(&answer);
+		if (answer == 2) {
+			printf("偶数を選択したね。\n");
+		} else if (answer == 1) {
+			printf("奇数を選択したね。\n");
+		} else {
+			printf("入力が間違っているよ。もう一度入力して。\n");
+			funcAnswerSelect(p);
+		}
+	};
+
+	//もう一度プレイするかどうかの選択をさせる関数
+	std::function<void(FuncPtr p)> funcPlaySelect = [&](FuncPtr p) {
+		p(&isPlay);
+		if (isPlay == 1) {
+			printf("1を選択したね。\n");
+		} else if (isPlay == 2) {
+			printf("2を選択したね。\n");
+		} else {
+			printf("入力が間違っているよ。もう一度入力して。\n");
+			funcPlaySelect(p);
+		}
+	};
 
 	//ゲームの説明
 	printf("サイコロを振るから出た目が奇数か偶数か当ててね\n");
@@ -70,8 +71,8 @@ int main(void) {
 
 		//回答の入力
 		printf("\n奇数は1,偶数は2で答えてね。さあ、サイコロの出目はどっち!?\n");
-		int answer;
-		AnswerSelect(p, &answer);
+		
+		funcAnswerSelect(Answer);
 
 		//奇数偶数判定
 		printf("サイコロの出目は");
@@ -98,9 +99,9 @@ int main(void) {
 		//もう一度プレイするかどうか
 		printf("もう一度プレイしますか？\n");
 		printf("はい : 1, いいえ : 2\n");
-		int play;
-		PlaySelect(p, &play);
-		if (play == 1) {
+		
+		funcPlaySelect(Answer);
+		if (isPlay == 1) {
 			printf("OK!もう一度始めるよ！\n\n");
 			Sleep(1000);
 			continue;
