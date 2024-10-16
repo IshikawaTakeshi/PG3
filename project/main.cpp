@@ -1,46 +1,114 @@
 #include <stdio.h>
+#include <Windows.h>
+#include <random>
 
+typedef void (*FuncPtr)(int*);
 
-int RecursiveWage(int time,int wage) {
-	if (time <= 1) return wage;
-	int newWage = wage;
-	newWage = (newWage * 2 - 50);
-	return RecursiveWage(time - 1, newWage);
+//乱数の生成
+int Random(int min, int max) {
+	std::random_device rd;
+	std::mt19937 mt(rd());
+	return std::uniform_int_distribution<int>(min, max)(mt);
 }
 
-template <typename T>
-T Max(T a, T b) {
-	return a > b ? a : b;
-}
-
-
-int main() {
-	//一般的な賃金体系
-	int hourlyWage = 1072;
-	//再帰的な賃金体系
-	int recursiveWage = 100;
-	//労働時間
-	int workingHours = 0;
-
-	//労働時間を入力
-	printf("労働時間を入力してください: ");
-	scanf_s("%d", &workingHours);
-	printf("労働時間 : %d時間\n", workingHours);
-
-	//一般的な賃金体系の計算
-	int generalWage = hourlyWage * workingHours;
-	//再帰的な賃金体系の計算
-	int result = 0;
-	for (int i = 1; i <= workingHours; i++) {
-		int newWage = RecursiveWage(i, recursiveWage);
-		result += newWage;
+//待ち時間の設定
+void SetTimeOut(int count) {
+	for (int i = 0; i < count; i++) {
+		putchar('.');
+		Sleep(1000); //ミリ秒単位
 	}
-	
+}
 
-	//結果の出力
-	printf("一般的な賃金体系で%d時間働いた: %d\n",workingHours, generalWage);
-	printf("再帰的な賃金体系で%d時間働いた: %d\n",workingHours, result);
-	printf("収入が高い方: %d\n", Max(generalWage, result));
-	
+void Answer(int* answer) {
+	printf("回答 : ");
+	scanf_s(" %d", answer);
+}
+
+//奇数か偶数か選択をさせる関数
+void AnswerSelect(FuncPtr p, int* select) {
+
+	p(select);
+	if (*select == 2) {
+		printf("偶数を選択したね。\n");
+	} else if (*select == 1) {
+		printf("奇数を選択したね。\n");
+	} else {
+		printf("入力が間違っているよ。もう一度入力して。\n");
+		AnswerSelect(p, select);
+	}
+}
+
+//もう一度プレイするかどうかの選択をさせる関数
+void PlaySelect(FuncPtr p, int* select) {
+	p(select);
+	if (*select == 1) {
+		printf("1を選択したね。\n");
+	} else if (*select == 2) {
+		printf("2を選択したね。\n");
+	} else {
+		printf("入力が間違っているよ。もう一度入力して。\n");
+		PlaySelect(p, select);
+	}
+}
+
+int main(void) {
+
+	//関数ポインタの宣言
+	FuncPtr p = Answer;
+
+	//ゲームの説明
+	printf("サイコロを振るから出た目が奇数か偶数か当ててね\n");
+	Sleep(1500);
+
+	//ゲームループ
+	while (true) {
+
+		//サイコロを振る
+		printf("サイコロを振ります");
+		SetTimeOut(3);
+		int dice = Random(1, 6);
+
+		//回答の入力
+		printf("\n奇数は1,偶数は2で答えてね。さあ、サイコロの出目はどっち!?\n");
+		int answer;
+		AnswerSelect(p, &answer);
+
+		//奇数偶数判定
+		printf("サイコロの出目は");
+		SetTimeOut(3);
+		if (dice % 2 == 0) {
+			printf("偶数です！\n");
+		} else {
+			printf("奇数です！\n");
+		}
+
+		//正解判定
+		Sleep(1000);
+		printf("\n");
+		if (answer == dice % 2) {
+			printf("正解です！おめでとうございます！\n");
+		} else {
+			printf("不正解です！残念でした！\n");
+		}
+
+		//サイコロの結果
+		Sleep(1000);
+		printf("\nサイコロの出目は%dでした。\n", dice);
+
+		//もう一度プレイするかどうか
+		printf("もう一度プレイしますか？\n");
+		printf("はい : 1, いいえ : 2\n");
+		int play;
+		PlaySelect(p, &play);
+		if (play == 1) {
+			printf("OK!もう一度始めるよ！\n\n");
+			Sleep(1000);
+			continue;
+		} else {
+			printf("ゲーム終了!またね。\n");
+			Sleep(1000);
+			break;
+		}
+	}
 	return 0;
 }
