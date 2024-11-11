@@ -1,46 +1,72 @@
 #include <stdio.h>
-#include <Windows.h>
 #include <random>
 #include <functional>
 
-
-class ISoda {
+class IShape {
 public:
-	virtual void PrintName() = 0;
+	virtual void Size() = 0;
 
+	virtual void Draw() = 0;
+protected:
+
+	float size_;
 };
 
-class CocaCola : public ISoda {
+
+class Rectangle : public IShape {
+
 public:
-	void PrintName() override {
-		printf("CocaCola is Soda.\n");
+	Rectangle(int w, int h) {
+		width_ = w;
+		height_ = h;
 	}
+
+	void Size() override {
+		size_ =  width_ * height_;
+	}
+
+	void Draw() override {
+		printf("Rectangle Size : %.2f\n",size_);
+	}
+
+private:
+
+	int width_;
+	int height_;
+
 };
 
-class Pepsi : public ISoda {
+class Circle : public IShape {
 
 public:
-	void PrintName() override {
-		printf("PepsiCola is Soda.\n");
+	Circle(float r) {
+		radius_ = r;
 	}
+
+	void Size() override {
+		size_ = static_cast<float>(3.14 * radius_ * radius_);
+	}
+
+	void Draw() override {
+		printf("Circle Size : %.2f\n", size_);
+	}
+
+private:
+
+	float radius_;
 };
 
-class Fanta : public ISoda {
-public:
-	void PrintName() override {
-		printf("Fanta is Soda.\n");
-	}
-};
 
 int main(void) {
 
-	ISoda* pSoda = new CocaCola();
-	ISoda* pSoda2 = new Pepsi();
-	ISoda* pSoda3 = new Fanta();
+	IShape* shape = new Rectangle(10, 20);
+	IShape* shape2 = new Circle(10);
 
-	pSoda->PrintName();
-	pSoda2->PrintName();
-	pSoda3->PrintName();
+	shape->Size();
+	shape2->Size();
+
+	shape->Draw();
+	shape2->Draw();
 
 	return 0;
 }
