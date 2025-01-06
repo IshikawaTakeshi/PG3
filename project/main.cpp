@@ -1,72 +1,33 @@
 #include <iostream>
-#include <fstream>
 #include <string>
-#include <vector>
-#include <thread>
-#include <atomic>
 #include <chrono>
-#include <sstream>
 
-// CSVファイルを読み込む関数
-std::vector<std::vector<std::string>> readCSV(const std::string& filename) {
-	std::vector<std::vector<std::string>> data;
-	std::ifstream file(filename);
-
-	if (!file.is_open()) {
-		std::cerr << "Failed to open file: " << filename << std::endl;
-		return data;
-	}
-
-	std::string line;
-	while (std::getline(file, line)) {
-		std::vector<std::string> row;
-		std::stringstream ss(line);
-		std::string cell;
-
-		while (std::getline(ss, cell, ',')) {
-			row.push_back(cell);
-		}
-
-		data.push_back(row);
-	}
-
-	file.close();
-	return data;
-}
-
-// バックグラウンドスレッドでCSVを定期的に読み込む関数
-void backgroundReader(const std::string& filename, std::atomic<bool>& running) {
-	if (running.load()) {
-		auto data = readCSV(filename);
-
-		// 読み込んだデータを表示（デバッグ用）
-		std::cout << "Read CSV:" << std::endl;
-		for (const auto& row : data) {
-			for (const auto& cell : row) {
-				std::cout << cell << " ";
-			}
-			std::cout << std::endl;
-		}
-
-
-	}
+// 時間をマイクロ秒で計測する関数
+template <typename Func>
+uint64_t measureTimeMicroseconds(Func func) {
+    auto start = std::chrono::high_resolution_clock::now();
+    func();
+    auto end = std::chrono::high_resolution_clock::now();
+    return std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
 }
 
 int main() {
-	std::atomic<bool> running(true);
-	std::string filename = "data.csv";
+    // 100000文字の'a'で初期化されたstd::string
+    std::string a(100000, 'a');
 
-	// バックグラウンドスレッドを開始
-	std::thread readerThread(backgroundReader, filename, std::ref(running));
+    // コピー処理の時間を計測
+    uint64_t copyTime = measureTimeMicroseconds([&]() {
+        std::string b = a; // コピー
+        });
 
-	// メインスレッドで他のタスクを実行
-	std::cout << "Press Enter to stop..." << std::endl;
-	std::cin.get(); // ユーザー入力待ち
+    // 移動処理の時間を計測
+    uint64_t moveTime = measureTimeMicroseconds([&]() {
+        std::string c = std::move(a); // 移動
+        });
 
-	// スレッドを終了
-	running.store(false);
-	readerThread.join();
+    // 結果を表示
+    std::cout << "コピーにかかった時間: " << copyTime << " us" << std::endl;
+    std::cout << "移動にかかった時間: " << moveTime << " us" << std::endl;
 
-	std::cout << "Program terminated." << std::endl;
-	return 0;
+    return 0;
 }
